@@ -1,0 +1,24 @@
+b, bb
+d, dd, ed
+f, ff, ph, gh, lf, ft
+g, gg, gh,gu,gue
+h, wh
+j, ge, g, dge, di, gg
+k, c, ch, cc, lk, qu, q, ck, x
+l, ll
+m, mm, mb, mn, lm
+n, nn,kn, gn, pn
+p, pp
+r, rr, wr, rh
+s, ss, c, sc, ps, st, ce, se
+t, tt, th, ed
+v, f, ph, ve
+w, wh, u, o
+z, zz, s, ss, x, ze, se
+
+a, ai, au, eigh, aigh, ay, er, et, au, a_e, ea
+e, ea, ie, ai, ae, ee, y, ey, ei, eo, ay, i
+o, a, ho, au, aw, oa, oe, eau, ew, oo, u, ou
+you, iew, yu, ul, eue, eau, ieu, eu
+oi, oy, uoy
+ow, ou, ough
