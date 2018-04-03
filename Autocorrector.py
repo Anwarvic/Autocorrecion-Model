@@ -128,6 +128,10 @@ class Autocorrector:
 
 
 
+
+
+
+
 if __name__ == "__main__":
     model = Autocorrector()
     print model.correct_sentence('i lov arabick and MMA')
