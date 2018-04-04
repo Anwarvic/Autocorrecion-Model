@@ -4,13 +4,23 @@ from pyjarowinkler.distance import get_jaro_distance
 from nltk import word_tokenize
 
 
+
+
+
 class Autocorrector:
     def __init__(self):
         """Initialize your data structures in the constructor."""
-        self.UnigramCounts = pickle.load(file('data/grammarly_wikitionary.pickle', 'r')) #dict
-        self.BigramCounts = pickle.load(file("data/count_2w.pickle",'r')) #dict
+        self.UnigramCounts = pickle.load(open('data/grammarly_wikitionary.pickle', 'rb')) #dict
+        self.BigramCounts = pickle.load(open("data/count_2w.pickle",'rb')) #dict
         self.vocabulary = self.UnigramCounts.keys()
         self.total = len(self.vocabulary)
+        self.edit_table = defaultdict(set)
+        with open('data/count_1edit.txt') as fin:
+            for line in fin:
+                ch_tuple, count = line.split('\t')
+                first, second = ch_tuple.split('|')
+                if first != ' ':
+                    self.edit_table[first.lower()].add(second)
         # ----- Applying Knser-Ney Method -----
         self.BeforeCounts = defaultdict(set)
         self.AfterCounts = defaultdict(set)
@@ -18,12 +28,13 @@ class Autocorrector:
             first_word, second_word = key.split(' ')
             self.AfterCounts[first_word].add(second_word)
             self.BeforeCounts[second_word].add(first_word)
-        print "Done Reading..."
+        print ("Done Reading...")
 
 
     def __known(self, words):
         #Return a set of the words subset that are actually in the vocabulary.
         return {w for w in words if w.lower() in self.vocabulary}
+
 
     def correct_word(self, word):
         """
@@ -40,11 +51,11 @@ class Autocorrector:
                         for i in range(len(wrd)+1)]
             # --------------------------------------------------
             alphabet = "abcdefghijklmnopqrstuvwxyz'"
-            pairs      = split_word(word_1)
-            deletes    = [a+b[1:]           for (a, b) in pairs if b]
+            pairs = split_word(word_1)
+            replaces = [word_1.replace(ch, sub) for ch in word_1 for sub in self.edit_table[ch]]
+            deletes = [a+b[1:] for (a, b) in pairs if b]
             transposes = [a+b[1]+b[0]+b[2:] for (a, b) in pairs if len(b) > 1]
-            replaces   = [a+c+b[1:]         for (a, b) in pairs for c in alphabet if b]
-            inserts    = [a+c+b             for (a, b) in pairs for c in alphabet]
+            inserts = [a+c+b for (a, b) in pairs for c in alphabet]
             return set(deletes + transposes + replaces + inserts)
         def levenstein2(word_2):
             #Return all strings that are two edits away from this word.
@@ -55,13 +66,23 @@ class Autocorrector:
         else: #the word not in the vocabulary
             candidates = self.__known(levenstein1(word))
             c = Counter({w: self.UnigramCounts[w] for w in candidates})
-            if c:
-                if c.most_common(1)[0][1] < 1000000: #------------------------------> hyper-parameter
+            if c: #there are candidates
+                if c.most_common(1)[0][1] < 1000000:
                     candidates = candidates.union(self.__known(levenstein2(word))) 
                     c = Counter({w: self.UnigramCounts[w] for w in candidates})
-                return c.most_common(100)    #lists of tuple
-            else: # didn't found candidates
-                return [(word, 0)]
+                    if c: #there are candidates
+                        return c.most_common(100)
+                    else:
+                        return [(word, 0)]
+                else:
+                    return c.most_common(100)
+            else: #c is empty
+                candidates = self.__known(levenstein2(word))
+                c = Counter({w: self.UnigramCounts[w] for w in candidates})
+                if c:
+                    return c.most_common(100)
+                else:
+                    return [(word, 0)]
 
 
     def __jaro_score(self, tupl):
@@ -100,7 +121,7 @@ class Autocorrector:
         if len(lst) == 1:
             return [sentence]
         output = []
-        for i in xrange(len(lst)-1):
+        for i in range(len(lst)-1):
             if "'" == lst[i][0]:
                 continue
             elif "'" == lst[i+1][0]:
@@ -122,21 +143,21 @@ class Autocorrector:
         output = ''
         start_word = "<s>"
         for wrd in self.__custom_tokenize(sentence):
-            print wrd
             if wrd in ",.;?!":
                 output += wrd
-            elif wrd.isupper():
+            elif wrd.isupper() and len(wrd) != 1:
                 output += ' ' + wrd
             else:
+                wrd = wrd.lower()
                 candidates = []
-                for tupl in self.correct_word(wrd.lower()):
+                for tupl in self.correct_word(wrd):
                     if start_word == '<s>':
                         editscore = 0
                     else:
                         editscore = self.__jaro_score((start_word, tupl[0]))
                     lmscore = self.__score((start_word, tupl[0]))
                     score = lmscore + editscore
-                    candidates.append((tupl[0], score))
+                    candidates.append((tupl[0], lmscore)) ###--------------------->score instead of lmscore
                 winner = max(candidates, key=lambda x: x[1])[0]
                 output += ' ' + case_of(wrd)(winner)
                 start_word = winner
@@ -150,7 +171,9 @@ class Autocorrector:
 
 if __name__ == "__main__":
     model = Autocorrector()
-    print model.correct_word('saticfay')
-    # print model.correct_sentence('i Lov englsh and MMA')
-    # print model.correct_sentence('no this answer doesnt saticfay me')
-    # print model.correct_sentence('In arabick')
+    # print (model.correct_word('saticfay'))
+    # print (model.correct_word('arabicke'))
+    print (model.correct_sentence('i Lov engls and MMA'))
+    print (model.correct_sentence('no tis answr doesnt saticfay me'))
+    print (model.correct_sentence('In arabicke'))
+    print (model.correct_sentence('boooks abot fotware develpomeent'))

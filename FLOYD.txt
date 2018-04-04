@@ -1,0 +1,32 @@
+login:
+======
+floyd login -u anwarvic
+
+
+Link dataset:
+=============
+=> create dataset manually from the website
+=> go to the local directory of the data
+=> open the teminal and run the following two commands
+   => floyd data init <dataset_name>
+   => floyd data upload
+
+
+Link project:
+=============
+=> create project manually from the website
+=> go to the local directory of the project
+=> open the teminal and run the following two commands
+   => floyd init <dataset_name>
+
+
+Run job:
+===========
+=> floyd run --data anwarvic/datasets/<dataset_name>/6:data --mode jupyter
+for example:
+=> floyd run --data anwarvic/datasets/lm-dataset/1:data --mode jupyter
+
+
+NOTE:
+======
+you can change the directories easily
