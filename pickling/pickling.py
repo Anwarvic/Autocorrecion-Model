@@ -31,3 +31,4 @@ with open(filename+".txt", "r") as f:
 		bi, count = line.split('\t')
 		output[bi.lower()] = int(count.strip())
 pickle.dump(output, open(DESTINATION+filename+".pickle",'wb'))
+
